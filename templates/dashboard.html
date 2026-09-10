@@ -110,9 +110,9 @@
             <div class="card-body">
                 <form action="{{ url_for('save_settings_api') }}" method="POST">
                     <div class="mb-3">
-                        <label class="form-label">SOCKS5 Proxy</label>
-                        <input type="text" id="proxyInput" class="form-control" name="proxy" value="{{ proxy }}" placeholder="socks5://user:pass@host:port (leave empty for direct)">
-                        <div class="form-text">Leave empty to use direct connection.</div>
+                        <label class="form-label">Proxy URL (HTTP, HTTPS, or SOCKS5)</label>
+                        <input type="text" id="proxyInput" class="form-control" name="proxy" value="{{ proxy }}" placeholder="http://user:pass@host:port">
+                        <div class="form-text">Supports <b>http://</b>, <b>https://</b>, and <b>socks5h://</b>. Leave empty for direct.</div>
                     </div>
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary flex-grow-1">Save Settings</button>
