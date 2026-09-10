@@ -318,7 +318,13 @@ def bb_send_otp(session, mobile, tag=""):
     try:
         resp = session.post("https://www.bigbasket.com/member-tdl/v3/member/otp/",
                             json={"identifier": mobile, "referrer": "unified_login"}, timeout=12)
-        data = resp.json()
+        try:
+            data = resp.json()
+        except Exception:
+            err_text = str(resp.text)[:50].replace('\n', ' ')
+            print(f"    [!] {tag} OTP Request Failed (Proxy/BB Block): Status {resp.status_code} | {err_text}")
+            return None
+            
         ref_id = data.get("refId")
         if ref_id:
             return ref_id
@@ -326,8 +332,11 @@ def bb_send_otp(session, mobile, tag=""):
         if err:
             print(f"    [!] {tag} OTP Error for {mobile}: {err}")
         return None
+    except requests.exceptions.Timeout:
+        print(f"    [!] {tag} OTP Request Timeout: Proxy is too slow.")
+        return None
     except Exception as e:
-        print(f"    [!] {tag} OTP Request Failed for {mobile}: {e}")
+        print(f"    [!] {tag} OTP Request Failed: Proxy Connection Error.")
         return None
 
 def bb_verify_otp(session, mobile, otp, ref_id):
@@ -335,7 +344,10 @@ def bb_verify_otp(session, mobile, otp, ref_id):
         resp = session.post("https://www.bigbasket.com/member-tdl/v3/member/unified-login/",
                             json={"mobile_no": mobile, "mobile_no_otp": otp, "refId": ref_id}, timeout=12)
         if resp.status_code == 200:
-            return resp.json()
+            try:
+                return resp.json()
+            except:
+                pass
         return None
     except:
         return None
