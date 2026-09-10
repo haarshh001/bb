@@ -100,10 +100,14 @@
                 <form action="{{ url_for('save_settings_api') }}" method="POST">
                     <div class="mb-3">
                         <label class="form-label">SOCKS5 Proxy</label>
-                        <input type="text" class="form-control" name="proxy" value="{{ proxy }}" placeholder="socks5://user:pass@host:port (leave empty for direct)">
+                        <input type="text" id="proxyInput" class="form-control" name="proxy" value="{{ proxy }}" placeholder="socks5://user:pass@host:port (leave empty for direct)">
                         <div class="form-text">Leave empty to use direct connection.</div>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">Save Settings</button>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-grow-1">Save Settings</button>
+                        <button type="button" class="btn btn-outline-info" onclick="testProxy()">Test Proxy</button>
+                    </div>
+                    <div id="proxyTestResult" class="mt-2 small" style="display:none;"></div>
                 </form>
             </div>
         </div>
@@ -124,6 +128,32 @@ function toggleInst(id, action) {
         body: JSON.stringify({instance_id: id, action: action})
     }).then(res => res.json()).then(data => {
         window.location.reload();
+    });
+}
+
+function testProxy() {
+    const proxy = document.getElementById('proxyInput').value;
+    const resDiv = document.getElementById('proxyTestResult');
+    resDiv.style.display = 'block';
+    resDiv.innerHTML = '<span class="text-warning">Testing connection...</span>';
+    
+    const formData = new FormData();
+    formData.append('proxy', proxy);
+    
+    fetch("{{ url_for('test_proxy') }}", {
+        method: "POST",
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if(data.status === 'success') {
+            resDiv.innerHTML = `<span class="text-success">✅ Success! Connected with IP: ${data.ip}</span>`;
+        } else {
+            resDiv.innerHTML = `<span class="text-danger">❌ Failed: ${data.message}</span>`;
+        }
+    })
+    .catch(err => {
+        resDiv.innerHTML = `<span class="text-danger">❌ Error: ${err.message}</span>`;
     });
 }
 </script>

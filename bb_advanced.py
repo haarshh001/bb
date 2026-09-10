@@ -179,12 +179,18 @@ def load_links():
 # FIREBASE HELPERS
 # ==========================================
 def fetch_firebase(url, proxies=None):
-    try:
-        res = requests.get(url, timeout=8, proxies=proxies)
-        if res.status_code == 200:
-            return res.json()
-    except:
-        pass
+    for _ in range(3):
+        try:
+            res = requests.get(url, timeout=12, proxies=proxies)
+            if res.status_code == 200:
+                return res.json()
+            elif res.status_code >= 500:
+                time.sleep(1)
+                continue
+            else:
+                break
+        except Exception:
+            time.sleep(1)
     return None
 
 def fetch_clients(fb_url, proxies=None):
@@ -652,6 +658,26 @@ def save_settings_api():
     settings["proxy"] = proxy
     save_settings(settings)
     return redirect(url_for("index"))
+
+@app.route("/api/test_proxy", methods=["POST"])
+@requires_auth
+def test_proxy():
+    proxy = request.form.get("proxy", "").strip()
+    proxies = {"http": proxy, "https": proxy} if proxy else None
+    
+    last_err = ""
+    for attempt in range(3):
+        try:
+            res = requests.get("https://api.ipify.org?format=json", proxies=proxies, timeout=10)
+            return jsonify({"status": "success", "ip": res.json().get("ip")})
+        except requests.exceptions.Timeout:
+            last_err = "Connection timed out"
+            time.sleep(1)
+        except Exception as e:
+            last_err = str(e)
+            time.sleep(1)
+            
+    return jsonify({"status": "error", "message": f"Failed after 3 retries. Last error: {last_err}"})
 
 @app.route("/logs")
 @requires_auth
