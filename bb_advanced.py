@@ -11,6 +11,11 @@ import shutil
 import uuid
 import tempfile
 import requests
+try:
+    from curl_cffi import requests as cffi_requests
+    HAS_CFFI = True
+except ImportError:
+    HAS_CFFI = False
 from datetime import datetime
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -294,9 +299,14 @@ def poll_for_bb_otp(fb_url, device_id, last_key, timeout, instance_id, proxies=N
 # BIGBASKET API FUNCTIONS
 # ==========================================
 def bb_build_session(proxies=None):
-    s = requests.Session()
-    if proxies:
-        s.proxies.update(proxies)
+    if HAS_CFFI:
+        s = cffi_requests.Session(impersonate="chrome120")
+        if proxies:
+            s.proxies.update(proxies)
+    else:
+        s = requests.Session()
+        if proxies:
+            s.proxies.update(proxies)
     s.headers.update({
         "User-Agent": "BB Android/v8.38.0/os 11",
         "x-channel": "BB-Android",
@@ -712,6 +722,15 @@ def test_proxy():
             
     return jsonify({"status": "error", "message": f"Failed after 3 retries. Last error: {last_err}"})
 
+@app.route("/api/myip")
+@requires_auth
+def my_ip():
+    try:
+        res = requests.get("https://api.ipify.org?format=json", timeout=10)
+        return jsonify({"ip": res.json().get("ip")})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
 @app.route("/logs")
 @requires_auth
 def view_logs():
@@ -758,4 +777,8 @@ def view_hits():
 
 if __name__ == "__main__":
     os.makedirs("templates", exist_ok=True)
+    if HAS_CFFI:
+        print("[+] curl_cffi loaded - Chrome TLS fingerprint active (anti-WAF bypass)")
+    else:
+        print("[!] curl_cffi NOT installed - using default requests (may get 403 on Railway)")
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
