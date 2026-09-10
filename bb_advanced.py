@@ -623,6 +623,27 @@ def manage_instances():
             RUNNING_FLAGS[inst_id] = False
             del instances[inst_id]
             save_instances(instances)
+            
+    elif action == "auto_divide":
+        count = int(request.form.get("instance_count", 1))
+        all_links = load_links()
+        total_links = len(all_links)
+        if total_links > 0 and count > 0:
+            for i_id in list(instances.keys()):
+                RUNNING_FLAGS[i_id] = False
+                del instances[i_id]
+            
+            chunk_size = total_links // count
+            remainder = total_links % count
+            
+            current_start = 1
+            for i in range(count):
+                extra = 1 if i < remainder else 0
+                current_end = current_start + chunk_size + extra - 1
+                if current_start <= total_links:
+                    instances[str(uuid.uuid4())] = {"start_idx": current_start, "end_idx": current_end}
+                    current_start = current_end + 1
+            save_instances(instances)
 
     return redirect(url_for("index"))
 

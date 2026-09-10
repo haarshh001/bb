@@ -75,7 +75,7 @@
                 </table>
 
                 <hr>
-                <form action="{{ url_for('manage_instances') }}" method="POST" class="row g-2 align-items-end">
+                <form action="{{ url_for('manage_instances') }}" method="POST" class="row g-2 align-items-end mb-3">
                     <input type="hidden" name="action" value="add">
                     <div class="col-auto">
                         <label class="form-label small">Start Link #</label>
@@ -87,6 +87,17 @@
                     </div>
                     <div class="col-auto">
                         <button type="submit" class="btn btn-primary btn-sm">Add Instance</button>
+                    </div>
+                </form>
+                
+                <form action="{{ url_for('manage_instances') }}" method="POST" class="row g-2 align-items-end border-top pt-2">
+                    <input type="hidden" name="action" value="auto_divide">
+                    <div class="col-auto">
+                        <label class="form-label small text-warning">Auto-Divide All Links Into Instances</label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" name="instance_count" class="form-control" value="4" required min="1" placeholder="Count">
+                            <button type="submit" class="btn btn-warning" onclick="return confirm('This will delete all current instances. Proceed?')">Auto Create</button>
+                        </div>
                     </div>
                 </form>
             </div>
