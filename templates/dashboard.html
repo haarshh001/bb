@@ -1,0 +1,130 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card bg-primary text-white">
+            <div class="card-body">
+                <h6>Total Scanned</h6>
+                <h2>{{ stats.total_scanned }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card bg-success text-white">
+            <div class="card-body">
+                <h6>Total Hits 💰</h6>
+                <h2>{{ stats.total_hits }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card bg-danger text-white">
+            <div class="card-body">
+                <h6>Errors</h6>
+                <h2>{{ stats.total_errors }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-7">
+        <div class="card mb-4">
+            <div class="card-header">Worker Instances</div>
+            <div class="card-body">
+                <table class="table table-dark table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Links Range</th>
+                            <th>Status</th>
+                            <th>Controls</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inst in instances %}
+                        <tr>
+                            <td><span class="font-monospace text-muted">{{ inst.id[:6] }}</span></td>
+                            <td>{{ inst.start_idx }} - {{ inst.end_idx }}</td>
+                            <td>
+                                {% if inst.running %}
+                                <span class="badge bg-success">Running</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Stopped</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if inst.running %}
+                                <button class="btn btn-sm btn-danger" onclick="toggleInst('{{ inst.id }}', 'stop')">Stop</button>
+                                {% else %}
+                                <button class="btn btn-sm btn-success" onclick="toggleInst('{{ inst.id }}', 'start')">Start</button>
+                                <form action="{{ url_for('manage_instances') }}" method="POST" class="d-inline">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="instance_id" value="{{ inst.id }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">X</button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">No instances created yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <hr>
+                <form action="{{ url_for('manage_instances') }}" method="POST" class="row g-2 align-items-end">
+                    <input type="hidden" name="action" value="add">
+                    <div class="col-auto">
+                        <label class="form-label small">Start Link #</label>
+                        <input type="number" name="start_idx" class="form-control form-control-sm" value="1" required min="1">
+                    </div>
+                    <div class="col-auto">
+                        <label class="form-label small">End Link #</label>
+                        <input type="number" name="end_idx" class="form-control form-control-sm" value="20" required min="1">
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary btn-sm">Add Instance</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5">
+        <div class="card mb-4">
+            <div class="card-header">⚙️ Settings</div>
+            <div class="card-body">
+                <form action="{{ url_for('save_settings_api') }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">SOCKS5 Proxy</label>
+                        <input type="text" class="form-control" name="proxy" value="{{ proxy }}" placeholder="socks5://user:pass@host:port (leave empty for direct)">
+                        <div class="form-text">Leave empty to use direct connection.</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Save Settings</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="alert alert-info small">
+            <strong>Note:</strong> Each instance processes a range of Firebase links. Use non-overlapping ranges (e.g., 1-20, 21-40) for maximum speed.
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleInst(id, action) {
+    fetch("{{ url_for('toggle_instance') }}", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({instance_id: id, action: action})
+    }).then(res => res.json()).then(data => {
+        window.location.reload();
+    });
+}
+</script>
+{% endblock %}

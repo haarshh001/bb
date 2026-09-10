@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between">
+        <span>📋 Live Logs</span>
+        <button class="btn btn-sm btn-outline-light" onclick="fetchLogs()">Refresh</button>
+    </div>
+    <div class="card-body">
+        <div id="log-container" style="max-height:70vh; overflow-y:auto; font-family:monospace; font-size:0.85rem; background:#111; padding:15px; border-radius:8px;">
+            <p class="text-muted">Loading...</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function fetchLogs() {
+    fetch("{{ url_for('api_logs') }}")
+    .then(r => r.json())
+    .then(logs => {
+        const container = document.getElementById('log-container');
+        if (logs.length === 0) {
+            container.innerHTML = '<p class="text-muted">No logs yet.</p>';
+            return;
+        }
+        container.innerHTML = logs.map(l => {
+            let color = '#ccc';
+            if (l.includes('💰') || l.includes('HIT')) color = '#00ff88';
+            else if (l.includes('❌') || l.includes('[!]')) color = '#ff4444';
+            else if (l.includes('✅')) color = '#44ff44';
+            else if (l.includes('📨')) color = '#44aaff';
+            else if (l.includes('⏰')) color = '#ffaa44';
+            else if (l.includes('🔍')) color = '#aaaaff';
+            return `<div style="color:${color}">${l}</div>`;
+        }).join('');
+        container.scrollTop = container.scrollHeight;
+    });
+}
+fetchLogs();
+setInterval(fetchLogs, 3000);
+</script>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="card">
+    <div class="card-header">🔥 Firebase Links</div>
+    <div class="card-body">
+        <form method="POST">
+            <input type="hidden" name="action" value="edit">
+            <textarea name="content" class="form-control mb-3" rows="20" style="font-family:monospace; font-size:0.85rem;">{{ content }}</textarea>
+            <button type="submit" class="btn btn-primary">Save All</button>
+        </form>
+        <hr>
+        <form method="POST" class="row g-2 align-items-end">
+            <input type="hidden" name="action" value="add">
+            <div class="col">
+                <input type="text" name="link" class="form-control" placeholder="https://firebase-url.firebaseio.com">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-success">Add Link</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
