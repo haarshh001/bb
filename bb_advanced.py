@@ -314,7 +314,7 @@ def bb_build_session(proxies=None):
         "x-entry-context-id": "100",
         "x-tcp-platform": "native",
         "x-pharma": "true",
-        "x-device-id": "2f2cba1f398acd73",
+        "x-device-id": uuid.uuid4().hex[:16],
         "x-tracker": str(uuid.uuid4()),
         "Accept": "application/json, text/plain, */*",
         "Content-Type": "application/json",
